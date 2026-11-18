@@ -1,0 +1,201 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && auth.uid === $uid && ((!data.exists() && newData.child('role').val() === 'customer' && newData.child('active').val() === true) || (data.exists() && newData.child('role').val() === data.child('role').val() && newData.child('active').val() === data.child('active').val() && newData.child('email').val() === data.child('email').val()))",
+        ".validate": "newData.hasChildren(['email', 'displayName', 'role', 'active']) && newData.child('email').isString() && newData.child('displayName').isString() && newData.child('displayName').val().length > 0 && newData.child('role').isString() && newData.child('active').isBoolean() && (!data.exists() || newData.child('role').val() === data.child('role').val())",
+        "role": {
+          ".validate": "newData.val() === 'customer' || (data.exists() && newData.val() === data.val())"
+        },
+        "active": {
+          ".validate": "newData.isBoolean() && (!data.exists() || newData.val() === data.val())"
+        },
+        "email": {
+          ".validate": "newData.isString() && (!data.exists() || newData.val() === data.val())"
+        },
+        "displayName": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "phone": {
+          ".validate": "newData.isString()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && (!data.exists() || newData.val() === data.val())"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "serviceAreas": {
+          "$area": {
+            ".validate": "newData.isString()"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "trackingReservations": {
+      "$tracking": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'customer' && root.child('users').child(auth.uid).child('active').val() === true",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'customer' && root.child('users').child(auth.uid).child('active').val() === true && !data.exists() && newData.val() === true"
+      }
+    },
+    "shipments": {
+      ".indexOn": [
+        "ownerUid",
+        "assignedCourierUid"
+      ],
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (root.child('users').child(auth.uid).child('role').val() === 'customer' && query.orderByChild === 'ownerUid' && query.equalTo === auth.uid) || (root.child('users').child(auth.uid).child('role').val() === 'courier' && query.orderByChild === 'assignedCourierUid' && query.equalTo === auth.uid))",
+      "$shipmentId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || data.child('ownerUid').val() === auth.uid || (root.child('users').child(auth.uid).child('role').val() === 'courier' && data.child('assignedCourierUid').val() === auth.uid))",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('active').val() === true && ((!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'customer' && newData.child('ownerUid').val() === auth.uid && newData.child('status').val() === 'pending_review' && !newData.child('assignedCourierUid').exists() && newData.child('trackingNumber').isString() && root.child('trackingReservations').child(newData.child('trackingNumber').val()).val() === true) || (data.exists() && root.child('users').child(auth.uid).child('role').val() === 'customer' && data.child('ownerUid').val() === auth.uid && data.child('status').val() === 'pending_review' && newData.child('status').val() === 'cancelled') || (data.exists() && root.child('users').child(auth.uid).child('role').val() === 'courier' && data.child('assignedCourierUid').val() === auth.uid && ((data.child('status').val() === 'pickup_assigned' && newData.child('status').val() === 'picked_up') || (data.child('status').val() === 'picked_up' && newData.child('status').val() === 'in_transit') || (data.child('status').val() === 'in_transit' && newData.child('status').val() === 'at_hub') || (data.child('status').val() === 'at_hub' && newData.child('status').val() === 'out_for_delivery') || (data.child('status').val() === 'out_for_delivery' && newData.child('status').val() === 'delivered' && newData.child('recipientName').isString() && newData.child('recipientName').val().length > 0) || (data.child('status').val() === 'out_for_delivery' && newData.child('status').val() === 'delivery_failed' && newData.child('failureReason').isString() && newData.child('failureReason').val().length > 0))) || (data.exists() && root.child('users').child(auth.uid).child('role').val() === 'admin' && ((data.child('status').val() === 'pending_review' && newData.child('status').val() === 'confirmed') || (data.child('status').val() === 'pending_review' && newData.child('status').val() === 'rejected' && newData.child('rejectionReason').isString() && newData.child('rejectionReason').val().length > 0) || (data.child('status').val() === 'confirmed' && newData.child('status').val() === 'pickup_assigned' && root.child('users').child(newData.child('assignedCourierUid').val()).child('role').val() === 'courier' && root.child('users').child(newData.child('assignedCourierUid').val()).child('active').val() === true) || (data.child('status').val() === 'pickup_assigned' && newData.child('status').val() === 'picked_up') || (data.child('status').val() === 'picked_up' && newData.child('status').val() === 'in_transit') || (data.child('status').val() === 'in_transit' && newData.child('status').val() === 'at_hub') || (data.child('status').val() === 'at_hub' && newData.child('status').val() === 'out_for_delivery') || (data.child('status').val() === 'out_for_delivery' && newData.child('status').val() === 'delivered' && newData.child('recipientName').isString() && newData.child('recipientName').val().length > 0) || (data.child('status').val() === 'out_for_delivery' && newData.child('status').val() === 'delivery_failed' && newData.child('failureReason').isString() && newData.child('failureReason').val().length > 0) || (data.child('status').val() === 'delivery_failed' && (newData.child('status').val() === 'pickup_assigned' || newData.child('status').val() === 'out_for_delivery') && root.child('users').child(newData.child('assignedCourierUid').val()).child('role').val() === 'courier' && root.child('users').child(newData.child('assignedCourierUid').val()).child('active').val() === true))))",
+        ".validate": "newData.hasChildren(['trackingNumber', 'ownerUid', 'status', 'serviceLevel', 'origin', 'destination', 'package', 'quote', 'createdAt', 'updatedAt', 'lastEventId', 'events']) && newData.child('trackingNumber').isString() && newData.child('ownerUid').isString() && newData.child('serviceLevel').isString() && newData.child('createdAt').isNumber() && newData.child('updatedAt').isNumber() && newData.child('lastEventId').isString() && newData.child('events').numChildren() >= 1 && newData.child('events').child(newData.child('lastEventId').val()).child('status').val() === newData.child('status').val() && ((!newData.child('recipientName').exists() || newData.child('status').val() === 'delivered') && (!newData.child('failureReason').exists() || newData.child('status').val() === 'delivery_failed') && (!newData.child('rejectionReason').exists() || newData.child('status').val() === 'rejected')) && ((!data.exists() && newData.child('events').numChildren() === 1) || (data.exists() && newData.child('events').numChildren() === data.child('events').numChildren() + 1)) && ((!data.exists() && !newData.child('assignedCourierUid').exists()) || (data.exists() && (newData.child('assignedCourierUid').val() === data.child('assignedCourierUid').val() || (root.child('users').child(auth.uid).child('role').val() === 'admin' && newData.child('assignedCourierUid').isString() && root.child('users').child(newData.child('assignedCourierUid').val()).child('role').val() === 'courier' && root.child('users').child(newData.child('assignedCourierUid').val()).child('active').val() === true && (newData.child('status').val() === 'pickup_assigned' || (data.child('status').val() === 'delivery_failed' && newData.child('status').val() === 'out_for_delivery'))))) && (!data.exists() || (newData.child('trackingNumber').val() === data.child('trackingNumber').val() && newData.child('ownerUid').val() === data.child('ownerUid').val() && newData.child('serviceLevel').val() === data.child('serviceLevel').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('origin').child('city').val() === data.child('origin').child('city').val() && newData.child('origin').child('address').val() === data.child('origin').child('address').val() && newData.child('origin').child('contactName').val() === data.child('origin').child('contactName').val() && newData.child('origin').child('phone').val() === data.child('origin').child('phone').val() && newData.child('destination').child('city').val() === data.child('destination').child('city').val() && newData.child('destination').child('address').val() === data.child('destination').child('address').val() && newData.child('destination').child('contactName').val() === data.child('destination').child('contactName').val() && newData.child('destination').child('phone').val() === data.child('destination').child('phone').val() && newData.child('package').child('description').val() === data.child('package').child('description').val() && newData.child('package').child('category').val() === data.child('package').child('category').val() && newData.child('package').child('actualWeightKg').val() === data.child('package').child('actualWeightKg').val() && newData.child('package').child('pieces').val() === data.child('package').child('pieces').val() && newData.child('package').child('lengthCm').val() === data.child('package').child('lengthCm').val() && newData.child('package').child('widthCm').val() === data.child('package').child('widthCm').val() && newData.child('package').child('heightCm').val() === data.child('package').child('heightCm').val() && newData.child('package').child('instructions').val() === data.child('package').child('instructions').val() && newData.child('quote').child('billableWeightKg').val() === data.child('quote').child('billableWeightKg').val() && newData.child('quote').child('estimatedAmountIdr').val() === data.child('quote').child('estimatedAmountIdr').val() && newData.child('quote').child('currency').val() === data.child('quote').child('currency').val() && newData.child('quote').child('volumetricWeightKg').val() === data.child('quote').child('volumetricWeightKg').val() && newData.child('quote').child('divisor').val() === data.child('quote').child('divisor').val()))",
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'pending_review' || newData.val() === 'confirmed' || newData.val() === 'pickup_assigned' || newData.val() === 'picked_up' || newData.val() === 'in_transit' || newData.val() === 'at_hub' || newData.val() === 'out_for_delivery' || newData.val() === 'delivered' || newData.val() === 'delivery_failed' || newData.val() === 'rejected' || newData.val() === 'cancelled')"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "assignedCourierUid": {
+          ".validate": "newData.val() === null || newData.isString()"
+        },
+        "confirmedAt": {
+          ".validate": "!newData.exists() || newData.isNumber()"
+        },
+        "deliveredAt": {
+          ".validate": "!newData.exists() || newData.isNumber()"
+        },
+        "recipientName": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+        "failureReason": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+        "rejectionReason": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+        "trackingNumber": {
+          ".validate": "newData.isString()"
+        },
+        "ownerUid": {
+          ".validate": "newData.isString()"
+        },
+        "serviceLevel": {
+          ".validate": "newData.isString()"
+        },
+        "origin": {
+          ".validate": "newData.hasChildren(['city', 'address', 'contactName', 'phone'])"
+        },
+        "destination": {
+          ".validate": "newData.hasChildren(['city', 'address', 'contactName', 'phone'])"
+        },
+        "package": {
+          ".validate": "newData.hasChildren(['description', 'category', 'actualWeightKg', 'pieces'])"
+        },
+        "quote": {
+          ".validate": "newData.hasChildren(['billableWeightKg', 'estimatedAmountIdr', 'currency'])"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && (!data.exists() || newData.val() === data.val())"
+        },
+        "lastEventId": {
+          ".validate": "newData.isString()"
+        },
+        "events": {
+          "$eventId": {
+            ".validate": "(!data.exists() && newData.hasChildren(['id', 'status', 'label', 'actorUid', 'actorRole', 'createdAt']) && newData.child('id').val() === $eventId && newData.child('actorUid').val() === auth.uid && newData.child('createdAt').isNumber() && ((root.child('users').child(auth.uid).child('role').val() === 'customer' && newData.child('actorRole').val() === 'customer') || (root.child('users').child(auth.uid).child('role').val() === 'admin' && newData.child('actorRole').val() === 'admin') || (root.child('users').child(auth.uid).child('role').val() === 'courier' && newData.child('actorRole').val() === 'courier'))) || (data.exists() && newData.val() === data.val())",
+            "id": {
+              ".validate": "newData.isString() && newData.val() === $eventId"
+            },
+            "status": {
+              ".validate": "newData.isString()"
+            },
+            "label": {
+              ".validate": "newData.isString()"
+            },
+            "actorUid": {
+              ".validate": "newData.isString()"
+            },
+            "actorRole": {
+              ".validate": "newData.isString()"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "note": {
+              ".validate": "newData.isString()"
+            },
+            "reason": {
+              ".validate": "newData.isString()"
+            },
+            "locationLabel": {
+              ".validate": "newData.isString()"
+            },
+            "recipientName": {
+              ".validate": "newData.isString()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "trackingIndex": {
+      "$tracking": {
+        ".read": true,
+        ".write": "auth != null && root.child('users').child(auth.uid).child('active').val() === true && ((root.child('users').child(auth.uid).child('role').val() === 'customer' && root.child('trackingReservations').child($tracking).val() === true && !data.exists() && newData.child('status').val() === 'pending_review') || (root.child('users').child(auth.uid).child('role').val() === 'admin') || (root.child('users').child(auth.uid).child('role').val() === 'customer' && root.child('shipments').child(data.child('shipmentId').val()).child('ownerUid').val() === auth.uid && root.child('shipments').child(data.child('shipmentId').val()).child('status').val() === 'pending_review' && data.child('status').val() === 'pending_review' && newData.child('status').val() === 'cancelled') || (root.child('users').child(auth.uid).child('role').val() === 'courier' && data.exists() && root.child('shipments').child(data.child('shipmentId').val()).child('assignedCourierUid').val() === auth.uid && ((data.child('status').val() === 'pickup_assigned' && newData.child('status').val() === 'picked_up') || (data.child('status').val() === 'picked_up' && newData.child('status').val() === 'in_transit') || (data.child('status').val() === 'in_transit' && newData.child('status').val() === 'at_hub') || (data.child('status').val() === 'at_hub' && newData.child('status').val() === 'out_for_delivery') || (data.child('status').val() === 'out_for_delivery' && (newData.child('status').val() === 'delivered' || newData.child('status').val() === 'delivery_failed')))))",
+        ".validate": "newData.hasChildren(['shipmentId', 'trackingNumber', 'status', 'originCity', 'destinationCity', 'timeline', 'createdAt', 'updatedAt', 'lastEventId']) && newData.child('trackingNumber').val() === $tracking && newData.child('shipmentId').isString() && newData.child('status').isString() && newData.child('originCity').isString() && newData.child('destinationCity').isString() && newData.child('createdAt').isNumber() && newData.child('updatedAt').isNumber() && newData.child('lastEventId').isString() && newData.child('timeline').child(newData.child('lastEventId').val()).child('status').val() === newData.child('status').val() && ((!data.exists() && newData.child('timeline').numChildren() === 1) || (data.exists() && newData.child('timeline').numChildren() === data.child('timeline').numChildren() + 1)) && (!data.exists() || (newData.child('shipmentId').val() === data.child('shipmentId').val() && newData.child('trackingNumber').val() === data.child('trackingNumber').val() && newData.child('originCity').val() === data.child('originCity').val() && newData.child('destinationCity').val() === data.child('destinationCity').val() && newData.child('createdAt').val() === data.child('createdAt').val()))",
+        "shipmentId": {
+          ".validate": "newData.isString()"
+        },
+        "trackingNumber": {
+          ".validate": "newData.isString() && newData.val() === $tracking"
+        },
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'pending_review' || newData.val() === 'confirmed' || newData.val() === 'pickup_assigned' || newData.val() === 'picked_up' || newData.val() === 'in_transit' || newData.val() === 'at_hub' || newData.val() === 'out_for_delivery' || newData.val() === 'delivered' || newData.val() === 'delivery_failed' || newData.val() === 'rejected' || newData.val() === 'cancelled')"
+        },
+        "originCity": {
+          ".validate": "newData.isString()"
+        },
+        "destinationCity": {
+          ".validate": "newData.isString()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "lastEventId": {
+          ".validate": "newData.isString()"
+        },
+        "deliveredAt": {
+          ".validate": "!newData.exists() || newData.isNumber()"
+        },
+        "timeline": {
+          "$eventId": {
+            ".validate": "(!data.exists() && newData.hasChildren(['status', 'label', 'locationLabel', 'createdAt']) && newData.child('createdAt').isNumber()) || (data.exists() && newData.val() === data.val())",
+            "$other": {
+              ".validate": false
+            },
+            "status": {
+              ".validate": "newData.isString() && (newData.val() === 'pending_review' || newData.val() === 'confirmed' || newData.val() === 'pickup_assigned' || newData.val() === 'picked_up' || newData.val() === 'in_transit' || newData.val() === 'at_hub' || newData.val() === 'out_for_delivery' || newData.val() === 'delivered' || newData.val() === 'delivery_failed' || newData.val() === 'rejected' || newData.val() === 'cancelled')"
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "SHIPFLOW — Cargo & Logistics",
+  "short_name": "SHIPFLOW",
+  "description": "Prototipe pengelolaan dan pelacakan pengiriman cargo.",
+  "start_url": "./index.html#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#102a43",
+  "icons": [
+    { "src": "./assets/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
